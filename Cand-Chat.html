@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // --- LOGIN LOGIC ---
-  const FIXED_PASSWORD = 'Chat2025';
+  const FIXED_PASSWORD = 'Aprily@1511';
   const overlay = document.getElementById('loginOverlay');
   const btn = document.getElementById('loginBtn');
   const pwd = document.getElementById('loginPwd');
@@ -475,26 +475,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   searchInput.addEventListener("input", () => {
-    const q = (searchInput.value || '').trim().toLowerCase();
+  const q = (searchInput.value || '').trim().toLowerCase();
 
-    if (!q) {
-      if (currentSheet) showSheet(currentSheet);
-      return;
-    }
-    
-    document.querySelectorAll(".sheet-item").forEach(el => el.classList.remove("active"));
-    const results = [];
-    Object.keys(workbookData).forEach(sheetName => {
-      (workbookData[sheetName] || []).forEach(item => {
-        const hay = (item.name).toLowerCase();
-        if (hay.includes(q)) {
-          results.push({ ...item, sheet: sheetName });
-        }
-      });
+  // لو البحث فاضي — ارجع للشيت الحالي
+  if (!q) {
+    if (currentSheet) showSheet(currentSheet);
+    return;
+  }
+
+  // شيل حالة Active من الشيتات
+  document.querySelectorAll(".sheet-item").forEach(el => el.classList.remove("active"));
+
+  const results = [];
+
+  // ✅ البحث فقط داخل عمود الـ Name
+  Object.keys(workbookData).forEach(sheetName => {
+    (workbookData[sheetName] || []).forEach(item => {
+      const nameOnly = (item.name || '').toLowerCase();
+      if (nameOnly.includes(q)) {
+        results.push({ ...item, sheet: sheetName });
+      }
     });
-    
-    renderCards(results);
   });
+
+  renderCards(results);
+});
 });
 </script>
 
