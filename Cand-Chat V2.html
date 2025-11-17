@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Canned Tool</title>
+<link rel="icon" href="https://chatgpt.com/backend-api/estuary/public_content/enc/eyJpZCI6Im1fNjkwOThjY2ZmNGYwODE5MWI2M2UwMmQ0MWQ4OGY5NDA6ZmlsZV8wMDAwMDAwMDRjYzg3MWY0OWU2YTU1MWFkMTc5OTVkZCIsInRzIjoiMjAzOTYiLCJwIjoicHlpIiwiY2lkIjoiMSIsInNpZyI6IjEzNDJhMjA5MDgwYmQyZmNhZTg2MDc5N2M4NDRkMWE3YzU5MDA1NzM5YzJmOTU0OGJhYmEwNjlmNDJlNmFkZGUiLCJ2IjoiMCIsImdpem1vX2lkIjpudWxsLCJjcCI6bnVsbCwibWEiOm51bGx9">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent1: #4ea8ff;
+  --accent2: #7c3aed;
+  --success: #22c55e;
+  --warn: #FFD700;
+  --footer-from: #251A40;
+  --footer-to: #0B3559;
+  --sidebar-w: 280px;
+}
+[data-theme="light"]{
+  --bg1: #f4f7fa;
+  --bg2: #ffffff;
+  --card: #ffffff;
+  --muted: #526176;
+  --text: #111827;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(99, 102, 241, 0.08);
+  --shadow-color-hover: rgba(99, 102, 241, 0.15);
+  --search-bg: #eef2f7;
+  --scrollbar-thumb: #cdd5e0;
+  --scrollbar-track: transparent;
+}
+[data-theme="dark"]{
+  --bg1: #0f172a;
+  --bg2: #1e293b;
+  --card: #162033;
+  --muted: #94a3b8;
+  --text: #f8fafc;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0,0,0,0.2);
+  --shadow-color-hover: rgba(0,0,0,0.35);
+  --search-bg: #0f172a;
+  --scrollbar-thumb: #334155;
+  --scrollbar-track: transparent;
+}
+html,body{
+  height:100%; margin:0; padding:0; font-family:'Tajawal',sans-serif; direction:rtl;
+  background:var(--bg1);
+  color:var(--muted); -webkit-font-smoothing:antialiased;
+  transition: background .3s ease, color .3s ease;
+}
+
+/* Splash Screen */
+.splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;
+background:var(--bg1);transition:opacity .4s ease;}
+.splash-box{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.splash .gear{font-size:32px;animation:spin 1s linear infinite;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.loader-text { font-weight: 800; color: var(--text); font-size: 16px; }
+.loader-text span { animation: blink 1.4s infinite both; }
+.loader-text span:nth-child(2) { animation-delay: .2s; }
+.loader-text span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: 0; } 40% { opacity: 1; } }
+
+
+/* Header */
+.header-wrap{position:fixed;top:0;left:0;right:0;height:42px;display:flex;align-items:center;z-index:200;
+background:linear-gradient(90deg,var(--accent2),var(--accent1));box-shadow:0 4px 15px rgba(0,0,0,.25);}
+.marquee{overflow:hidden;white-space:nowrap;width:100%;padding:6px 18px;}
+.marquee .text{display:inline-block;white-space:nowrap;font-weight:700;color:white;font-size:14px;
+text-shadow:0 1px 2px rgba(0,0,0,.2);animation:moveLeft 16s linear infinite;}
+@keyframes moveLeft{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+
+/* Theme Toggle */
+.theme-toggle{position:fixed;top:5px;left:12px;z-index:210;
+background:transparent;
+border:none;color:white;padding:6px 8px;border-radius:8px;cursor:pointer;font-weight:800;font-size:18px;
+transition: background .2s ease, transform .2s ease;}
+.theme-toggle:hover { background: rgba(255,255,255,0.1); transform: scale(1.1); }
+
+/* Layout */
+.app{display:flex;flex-direction:row-reverse;gap:24px;
+padding: 70px 24px 70px 24px;
+max-width:1600px;
+margin:0 auto;box-sizing:border-box;}
+.sidebar{
+  position:fixed;
+  top: 70px; right:24px;width:var(--sidebar-w);
+  height: calc(100vh - 70px - 70px);
+  display: flex; flex-direction: column;
+  background: var(--card);
+  border-radius:14px;
+  padding: 16px 0 16px 16px;
+  box-shadow:0 10px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color);
+  border:1px solid var(--border-color);z-index:110;margin-right: -18px;
+}
+
+/* Search Box inside Sidebar */
+.search-box{
+  display:flex;align-items:center;gap:8px;
+  background:var(--search-bg);padding:4px 10px;border-radius:10px;
+  border:1px solid var(--border-color);transition: border-color .2s ease, box-shadow .2s ease;
+  margin-bottom: 16px;
+}
+.search-box:focus-within {
+  border-color: var(--accent1); box-shadow: 0 0 0 3px rgba(78,168,255,.25);
+}
+.search-box input{
+  flex:1;border:none;outline:none;background:transparent;
+  color:var(--text);font-size:14px;padding:8px 4px; direction: ltr; text-align: left;
+}
+
+.sheet-list{
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display:flex;flex-direction:column;gap:8px;
+  padding-left: 6px;
+}
+/* CUSTOM SCROLLBAR */
+.sheet-list::-webkit-scrollbar { width: 8px; }
+.sheet-list::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+.sheet-list::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 20px; border: 2px solid var(--card); }
+.sheet-list::-webkit-scrollbar-thumb:hover { background-color: var(--muted); }
+
+/* *** FINAL FINAL STYLE FOR SHEET ITEMS *** */
+.sheet-item{
+  padding: 1px 3px;
+  margin-right: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+  border: 1px solid transparent;
+  transition: background .2s ease, border-color .2s ease, transform 0.2s ease;
+  /* Flexbox for perfect vertical alignment */
+  display: flex;
+  align-items: center;
+  min-height: 2.5em; /* Ensures consistent height */
+}
+/* Handling English Text specifically */
+.sheet-item[dir="ltr"] {
+    justify-content: flex-start;
+    text-align: left;
+}
+/* Default for Arabic Text */
+.sheet-item {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+
+.sheet-item:hover { background: var(--bg1); transform: translateX(-4px); }
+.sheet-item.active{
+  background:linear-gradient(90deg,rgba(78,168,255,.15),rgba(124,58,237,.12));
+  border-color: rgba(78,168,255, .3); color: var(--text);
+}
+
+/* Main content */
+.main{flex:1;min-height:70vh;margin-right:calc(var(--sidebar-w) + 24px); padding-top: 10px;}
+.grid{
+    display:grid;
+    gap:24px;
+    grid-template-columns: 1fr;
+}
+@media(min-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media(min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+@media(max-width:768px){
+  .app{flex-direction:column-reverse;padding-top:70px;}
+  .sidebar{position:relative;top:auto;right:auto;width:100%; margin-bottom: 24px; height: auto; max-height: 50vh; padding: 16px; margin-right: 0;}
+  .sheet-item { margin-right: 0; }
+  .main{margin-right:0}
+}
+
+.card{border-radius:14px;border:1px solid var(--border-color);display:flex;flex-direction:column;
+overflow:hidden;cursor:pointer;min-height:180px;transition:transform .25s ease,box-shadow .25s ease,opacity .35s;
+background:var(--card);box-shadow:0 4px 6px -1px var(--shadow-color), 0 2px 4px -2px var(--shadow-color);
+opacity:0;transform:translateY(10px);}
+.card.visible{opacity:1;transform:translateY(0);}
+.card:hover{transform:translateY(-5px);box-shadow:0 10px 15px -3px var(--shadow-color-hover), 0 4px 6px -4px var(--shadow-color-hover);}
+.card-title{text-align:center;font-weight:800;font-size:16px;color:var(--accent1);
+padding:12px 10px;border-bottom:1px solid var(--border-color); text-shadow: 0 0 8px rgba(78, 168, 255, 0.15);}
+.card-content{padding:14px;flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.frame{background:var(--bg1);border-radius:8px;padding:12px;flex:1;
+color:var(--text);font-size:14px;line-height:1.7;overflow:hidden;
+display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;text-overflow:ellipsis;}
+.card-footer{padding:10px 14px;font-size:12px;color:var(--muted);
+border-top:1px solid var(--border-color); transition: color .2s ease, background .2s ease;}
+.card-footer.copied { color: white; background: var(--success); text-align:center; font-weight: 700;}
+.empty{grid-column: 1 / -1; text-align:center;padding:40px;color:var(--muted);
+background:var(--card);border-radius:14px; border: 1px solid var(--border-color);}
+
+.footer-wrapper{position:fixed;left:0;right:0;bottom:0;z-index:100;}
+.footer-bar{height:34px;background:linear-gradient(90deg,var(--footer-from),var(--footer-to));
+display:flex;align-items:center;justify-content:center;box-shadow:0 -4px 15px rgba(0,0,0, .25);}
+.footer-bar .text{color:white;font-weight:700;font-size:13px;}
+
+/* Login Styles */
+#loginOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+background:linear-gradient(135deg,rgba(2,6,23,0.96),rgba(11,25,60,0.95));z-index:99999;transition:opacity .4s ease;}
+#loginBox{width:360px;max-width:94%;background:#0f1724;border-radius:12px;padding:22px 20px 20px;
+box-shadow:0 10px 40px rgba(0,0,0,0.6);color:#fff;text-align:center;font-family:'Tajawal',sans-serif;}
+.logoHeader{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;}
+.logoCircle{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#007BFF,#5B21B6);
+display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;box-shadow:0 0 10px rgba(0,123,255,0.4);}
+.logoHeader span{font-size:20px;font-weight:700;color:#fff;letter-spacing:.5px;}
+#loginBox h3{margin:0 0 14px;font-size:17px;color:#FFD700;text-shadow:0 0 8px rgba(255,215,0,0.12);}
+#loginBox input{box-sizing:border-box;width:100%;height:44px;padding:0 12px;border-radius:8px;
+border:1px solid rgba(255,255,255,0.15);background-color:rgba(255,255,255,0.05);color:#fff;margin:0 0 14px;
+outline:none;font-size:15px;direction:ltr;text-align:left;line-height:44px;caret-color:#4ea8ff;
+transition:border .18s ease,box-shadow .18s ease,background .12s ease;}
+#loginBox input::placeholder{color:rgba(255,255,255,0.65);}
+#loginBox input:focus{border-color:#4ea8ff;box-shadow:0 0 6px rgba(78,168,255,0.38);background-color:rgba(255,255,255,0.07);}
+#loginBox button{padding:10px 12px;width:100%;border-radius:8px;border:none;cursor:pointer;
+font-weight:700;font-size:15px;color:#fff;background:linear-gradient(90deg,#4ea8ff,#7c3aed);
+transition:transform .15s ease,box-shadow .15s ease;box-shadow:0 3px 8px rgba(0,0,0,0.25);}
+#loginBox button:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,0.35);}
+#loginBox button:active{transform:translateY(1px);box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+#loginMsg{color:#ffb3b3;font-size:13px;min-height:18px;margin-top:8px;}
+#protectedApp{display:none;opacity:0;transition:opacity .6s ease;}
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- Login Overlay -->
+<div id="loginOverlay">
+  <div id="loginBox">
+    <div class="logoHeader">
+      <div class="logoCircle">C</div>
+      <span>Canned Tool</span>
+    </div>
+    <h3>sign in</h3>
+    <input id="loginPwd" type="password" placeholder="Enter Password" autocomplete="off">
+    <button id="loginBtn">Login</button>
+    <div id="loginMsg"></div>
+    <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.6);">
+     Protected By Password
+    </div>
+  </div>
+</div>
+
+<div id="protectedApp">
+
+<!-- Splash Screen -->
+<div class="splash" id="splash">
+  <div class="splash-box">
+    <div class="gear">⚙️</div>
+    <div class="loader-text">جارٍ التحميل<span>.</span><span>.</span><span>.</span></div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header-wrap">
+  <div class="marquee">
+    <span class="text">⚠️ تذكر دائماً : استخدامك لهذه الأداة على مسؤوليتك الشخصية، ويجب التأكد من الويكي ⚠️</span>
+  </div>
+</div>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle" id="themeToggle">🌙</button>
+
+<!-- Layout Wrapper -->
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="search-box">
+      <span style="color: var(--muted); font-size: 18px;">🔍</span>
+      <input type="text" id="searchInput" placeholder="search here...">
+    </div>
+    <div class="sheet-list" id="sheetList"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="grid" id="cardsGrid">
+      <div class="empty">اختر شيت من القائمة للبدء 🚀</div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer-wrapper">
+  <div class="footer-bar">
+    <div class="text">Designed and Developed By : Geek © 2025 — Version 2.0.0</div>
+  </div>
+</div>
+
+<!-- Click sound -->
+<audio id="clickSound" preload="auto">
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA..." type="audio/mp3">
+</audio>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  // --- Right-Click Protection ---
+  document.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+  });
+
+  // --- LOGIN LOGIC ---
+  const FIXED_PASSWORD = 'Chat2025';
+  const overlay = document.getElementById('loginOverlay');
+  const btn = document.getElementById('loginBtn');
+  const pwd = document.getElementById('loginPwd');
+  const msg = document.getElementById('loginMsg');
+  const app = document.getElementById('protectedApp');
+
+  pwd.focus();
+  function unlock() {
+    if (pwd.value === FIXED_PASSWORD) {
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.style.display = 'none', 400);
+      app.style.display = 'block';
+      setTimeout(() => app.style.opacity = '1', 50);
+      sessionStorage.setItem('candat_unlocked', '1');
+    } else {
+      msg.textContent = 'كلمة المرور خاطئة';
+      pwd.value = '';
+      pwd.focus();
+    }
+  }
+  btn.addEventListener('click', unlock);
+  pwd.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+  if (sessionStorage.getItem('candat_unlocked') === '1') {
+    overlay.style.display = 'none';
+    app.style.display = 'block';
+    app.style.opacity = '1';
+  }
+
+  // --- APP LOGIC ---
+  const splash = document.getElementById("splash");
+  const sheetList = document.getElementById("sheetList");
+  const cardsGrid = document.getElementById("cardsGrid");
+  const searchInput = document.getElementById("searchInput");
+  const clickSound = document.getElementById("clickSound");
+  const themeToggle = document.getElementById("themeToggle");
+
+  let workbookData = {};
+  let currentSheet = null;
+
+  setTimeout(() => splash.style.opacity = "0", 800);
+  setTimeout(() => splash.style.display = "none", 1200);
+
+  themeToggle.addEventListener("click", () => {
+    const current = document.body.getAttribute("data-theme");
+    const next = current === "dark" ? "light" : "dark";
+    document.body.setAttribute("data-theme", next);
+    themeToggle.textContent = next === "dark" ? "🌙" : "☀️";
+  });
+
+  fetch('candat_data.xlsx')
+    .then(resp => {
+      if (!resp.ok) throw new Error("File not found");
+      return resp.arrayBuffer();
+    })
+    .then(buffer => {
+      const wb = XLSX.read(buffer, { type: "array" });
+      handleWorkbook(wb);
+    })
+    .catch((error) => {
+        cardsGrid.innerHTML = '<div class="empty">⚠️ خطأ: لم يتم العثور على ملف البيانات (candat_data.xlsx).</div>';
+        console.error("Error loading data file:", error);
+    });
+
+  function handleWorkbook(wb) {
+    workbookData = {};
+    wb.SheetNames.forEach(name => {
+      const ws = wb.Sheets[name];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const items = [];
+      for (let i = 1; i < rows.length; i++) {
+        if (rows[i] && rows[i][0] && rows[i][1]) {
+          items.push({ name: String(rows[i][0]), content: String(rows[i][1]), sheet: name });
+        }
+      }
+      workbookData[name] = items;
+    });
+    renderSheetList(wb.SheetNames);
+    if (wb.SheetNames.length > 0) {
+        showSheet(wb.SheetNames[0]);
+    } else {
+        cardsGrid.innerHTML = '<div class="empty">الملف فارغ أو لا يحتوي على شيتات قابلة للعرض.</div>';
+    }
+  }
+
+  function renderSheetList(names) {
+    sheetList.innerHTML = "";
+    names.forEach(name => {
+      const btn = document.createElement("div");
+      btn.className = "sheet-item";
+      btn.textContent = name;
+      
+      // *** MODIFICATION: Detect if text is primarily English and set direction ***
+      // A simple regex to check for English characters.
+      if (/^[a-zA-Z &]+$/.test(name)) {
+          btn.setAttribute('dir', 'ltr');
+      }
+
+      btn.addEventListener("click", () => showSheet(name));
+      sheetList.appendChild(btn);
+    });
+  }
+
+  function showSheet(name) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    currentSheet = name;
+    searchInput.value = '';
+    document.querySelectorAll(".sheet-item").forEach(el => el.classList.remove("active"));
+    const activeSheetElement = [...sheetList.children].find(el => el.textContent === name);
+    if (activeSheetElement) {
+        activeSheetElement.classList.add("active");
+    }
+    renderCards(workbookData[name] || []);
+  }
+
+  function renderCards(items) {
+    cardsGrid.innerHTML = "";
+    if (!items || !items.length) {
+      const query = searchInput.value.trim();
+      const message = query ? `لا توجد نتائج مطابقة لبحثك عن: "${query}" 🔍` : `هذا الشيت فارغ. 📂`;
+      cardsGrid.innerHTML = `<div class="empty">${message}</div>`;
+      return;
+    }
+    items.forEach((item, index) => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const displayContent = item.content.replace(/\n/g, "<br>");
+
+      card.innerHTML = `
+        <div class="card-title">${item.name}</div>
+        <div class="card-content">
+          <div class="frame">${displayContent}</div>
+        </div>
+        <div class="card-footer" data-original-text="📄 من شيت: ${item.sheet}">📄 من شيت: ${item.sheet}</div>`;
+
+      card.addEventListener("click", () => {
+        const contentToCopy = item.content.replace(/\n/g, "\n<p>&nbsp;</p>\n");
+        copyText(contentToCopy);
+        playClick();
+        
+        const footer = card.querySelector('.card-footer');
+        const originalText = footer.getAttribute('data-original-text');
+        footer.textContent = "✅ تم النسخ!";
+        footer.classList.add('copied');
+        setTimeout(() => {
+          footer.textContent = originalText;
+          footer.classList.remove('copied');
+        }, 1500);
+      });
+
+      cardsGrid.appendChild(card);
+      setTimeout(() => card.classList.add("visible"), 50 + index * 30);
+    });
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).catch(err => {
+      console.warn("Clipboard API failed, falling back to execCommand.", err);
+      const temp = document.createElement("textarea");
+      temp.value = text;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+    });
+  }
+
+  function playClick() {
+    clickSound.currentTime = 0;
+    clickSound.play().catch(e => console.log("Audio playback was prevented by the browser."));
+  }
+
+  searchInput.addEventListener("input", () => {
+    const q = (searchInput.value || '').trim().toLowerCase();
+
+    if (!q) {
+      if (currentSheet) showSheet(currentSheet);
+      return;
+    }
+    
+    document.querySelectorAll(".sheet-item").forEach(el => el.classList.remove("active"));
+    const results = [];
+    Object.keys(workbookData).forEach(sheetName => {
+      (workbookData[sheetName] || []).forEach(item => {
+        const hay = (item.name + ' ' + item.content).toLowerCase();
+        if (hay.includes(q)) {
+          results.push({ ...item, sheet: sheetName });
+        }
+      });
+    });
+    
+    renderCards(results);
+  });
+});
+</script>
+
+</div>
+</body>
+</html>
